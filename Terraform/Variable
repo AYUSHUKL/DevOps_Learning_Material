@@ -1,0 +1,29 @@
+| **Method**                         | **Description**                                                                                                                 | **Example / Usage**                                      |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `variable.tf` or `variables.tf`    | Declare variables with default values or types. Does **not** assign values unless `default` is specified.                       | `variable "region" { default = "us-east-1" }`            |
+| `terraform.tfvars`                 | A default file Terraform automatically loads to assign variable values.                                                         | `region = "us-west-2"`                                   |
+| `*.auto.tfvars`                    | Any file ending in `.auto.tfvars` is automatically loaded by Terraform. Useful for environment-specific configurations.         | `dev.auto.tfvars, prod.auto.tfvars`                      |
+| `-var` flag (CLI)                  | Directly pass variable values via command line for one-off executions. Overrides all file-based values.                         | `terraform apply -var="region=us-west-2"`                |
+| `-var-file` flag (CLI)             | Pass a specific `.tfvars` file manually via CLI.                                                                                | `terraform apply -var-file="dev.tfvars"`                 |
+| Environment Variables (`TF_VAR_`)  | Variables can be exported in shell using `TF_VAR_` prefix. Useful for automation or CI/CD pipelines.                            | `export TF_VAR_region=us-west-2`                         |
+| Terraform Cloud/Enterprise Vars    | When using Terraform Cloud, variables can be defined via the web UI or workspace settings.                                      | Defined in Terraform Cloud UI or via API                 |
+| `.tfvars.json` files               | JSON-formatted version of `.tfvars` file. Good for programmatic generation of variable files.                                   | `{ "region": "us-west-2" }` in `terraform.tfvars.json`   |
+| Module Input Variables             | When calling a module, variables can be passed as arguments in the module block.                                                | `module "vpc" { source = "./vpc" region = "us-west-2" }` |
+| Default values in `variable` block | A fallback method when no other value is provided. Useful for optional inputs.                                                  | `variable "instance_type" { default = "t2.micro" }`      |
+| Interactive Prompt (Optional)      | If no value is provided via any method, Terraform will prompt for input at runtime (unless in non-interactive/auto-apply mode). | Terraform asks: `var.region: Enter a value:`             |
+
+
+=============================================
+
+Precedence Order (Highest to Lowest):
+-var CLI flag
+
+-var-file CLI flag
+
+Environment variables (TF_VAR_)
+
+terraform.tfvars or *.auto.tfvars
+
+Default in variable block
+
+Prompt (if nothing is provided)
