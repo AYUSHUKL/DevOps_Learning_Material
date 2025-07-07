@@ -47,3 +47,12 @@ when to use which??
 | Use blue/green, canary, versioned releases | Don't want downtime or extra cost           |
 
 
+
+
+****Terraform Tip to Detect Drift:****
+
+terraform plan 
+
+terraform refresh
+
+to compare the realwordl with you trraform statefile
