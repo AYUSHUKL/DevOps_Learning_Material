@@ -1,0 +1,9 @@
+terraform validate
+terraform fmt
+terraform show
+terraform show -json
+terraform providers
+terraform output
+terraform refresh
+terraform graph   => to visualise this command dpwnload graphviz 
+terraform graph | dot -Tsvg > graph.svg

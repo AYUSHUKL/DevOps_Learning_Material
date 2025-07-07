@@ -1,0 +1,49 @@
+| Concept                  | **Mutable Infrastructure**                                    | **Immutable Infrastructure**                                  |
+| ------------------------ | ------------------------------------------------------------- | ------------------------------------------------------------- |
+| **Definition**           | Update/modify existing infrastructure in-place                | Replace infrastructure entirely instead of modifying it       |
+| **Example (Terraform)**  | Terraform changes a property of a live EC2 instance           | Terraform destroys the old EC2 instance and creates a new one |
+| **Approach to drift**    | Drift is harder to detect and fix without direct intervention | Drift is eliminated by replacing the whole resource           |
+| **Change behavior**      | Changes are applied live on existing resources                | Changes create a new resource with the updated config         |
+| **Speed**                | Faster updates                                                | Slower due to recreation and provisioning                     |
+| **Risk of Hidden Drift** | High — drift may not be obvious or fixed automatically        | Low — each deploy replaces the infrastructure, avoiding drift |
+| **Terraform Strategy**   | Uses in-place updates where possible (`terraform apply`)      | Forces recreation via lifecycle rules or full rebuild         |
+
+
+What is Configuration Drift?
+Drift refers to when the actual infrastructure diverges from what's defined in your Terraform code.
+
+✅ Example:
+Terraform says EC2 instance type is t3.micro
+
+Someone manually changes it in AWS to t3.large
+
+This is drift.
+
+Drift breaks the promise of IaC — that your infrastructure matches your code.
+
+Mutable Infrastructure and Drift
+Terraform default behavior is mutable: it updates resources in-place.
+
+This can leave parts of the infrastructure inconsistent if the plan doesn’t cover or detect all drift.
+
+Manual changes (via console, CLI, etc.) easily cause drift in mutable setups.
+
+Immutable Infrastructure to Avoid Drift
+Create new → test → destroy old.
+
+You use modules or patterns that replace instead of modify.
+
+lifecycle {
+  create_before_destroy = true
+}
+
+
+when to use which??
+
+| Use Immutable when...                      | Use Mutable when...                         |
+| ------------------------------------------ | ------------------------------------------- |
+| High compliance or mission-critical apps   | Fast, low-risk updates are preferred        |
+| Want to fully avoid drift & hidden state   | You can monitor drift or trust your process |
+| Use blue/green, canary, versioned releases | Don't want downtime or extra cost           |
+
+
