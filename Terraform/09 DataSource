@@ -1,0 +1,73 @@
+✅ What is a Data Source in Terraform?
+A data source in Terraform lets you read existing infrastructure information — without creating or modifying it.
+
+Think of it as "read-only" access to resources outside your Terraform code (or already created by Terraform elsewhere).
+
+🔍 Use Cases
+Use Case	Example
+Reference existing VPCs, AMIs, subnets, etc.	Use an AMI ID from AWS without hardcoding it
+Read remote state outputs	Get values from another Terraform workspace/module
+Use secrets or variables from external sources	Read a secret from Vault or SSM Parameter Store
+Fetch current region/account info	Get your current AWS region/account ID dynamically
+
+🛠️ Syntax
+hcl
+Copy
+Edit
+data "<PROVIDER>_<TYPE>" "<NAME>" {
+  <CONFIG>
+}
+📌 Example: Get Latest Amazon Linux 2 AMI in AWS
+hcl
+Copy
+Edit
+data "aws_ami" "amazon_linux" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_instance" "example" {
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = "t2.micro"
+}
+data.aws_ami.amazon_linux.id → Fetches the latest AMI ID from AWS
+
+You don’t create the AMI — you just use it
+
+📘 More Examples
+🔹 Fetch current AWS caller identity
+hcl
+Copy
+Edit
+data "aws_caller_identity" "current" {}
+
+output "account_id" {
+  value = data.aws_caller_identity.current.account_id
+}
+🔹 Read Terraform remote state
+hcl
+Copy
+Edit
+data "terraform_remote_state" "network" {
+  backend = "s3"
+
+  config = {
+    bucket = "my-state-bucket"
+    key    = "network/terraform.tfstate"
+    region = "us-east-1"
+  }
+}
+🚫 Data Sources Don't Create Resources
+Unlike resource blocks, data blocks don’t provision anything — they just fetch info.
+
+🔒 Best Practices
+Avoid hardcoding values — use data to dynamically fetch them
+
+Use data.terraform_remote_state for multi-stack infrastructure
+
+Combine with locals or output for better reuse

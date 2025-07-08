@@ -1,0 +1,154 @@
+Terraform Meta-Arguments — Overview
+
+Meta-Argument	Description
+count	    Creates         multiple copies of a resource
+for_each	Creates         a resource per item in a map or set
+provider	Specifies       which provider configuration to use (including aliases)
+depends_on	Explicitly      declares dependencies between resources
+lifecycle	Controls        create/update/destroy behavior of a resource
+provisioner	Executes        scripts or commands on resources during creation/destruction
+
+🔹 1. count – Create multiple instances
+hcl
+Copy
+Edit
+resource "aws_instance" "web" {
+  count         = 3
+  ami           = "ami-123456"
+  instance_type = "t2.micro"
+}
+Creates 3 EC2 instances. Use count.index inside the block to access each instance.
+
+🔹 2. for_each – Resource per item in a map/set
+hcl
+Copy
+Edit
+resource "aws_s3_bucket" "buckets" {
+  for_each = toset(["logs", "images", "videos"])
+  bucket   = "my-bucket-${each.key}"
+}
+Creates a separate S3 bucket for each item. each.key gives access to the current item.
+
+🔹 3. provider – Use a specific provider config
+hcl
+Copy
+Edit
+provider "aws" {
+  alias  = "west"
+  region = "us-west-1"
+}
+
+resource "aws_instance" "west" {
+  provider = aws.west
+  ...
+}
+Useful for multi-region or multi-account setups.
+
+🔹 4. depends_on – Force dependency
+hcl
+Copy
+Edit
+resource "null_resource" "delayed" {
+  depends_on = [aws_s3_bucket.logs]
+}
+Forces null_resource.delayed to wait until the S3 bucket is created.
+
+🔹 5. lifecycle – Control how Terraform handles changes
+hcl
+Copy
+Edit
+resource "aws_instance" "web" {
+  lifecycle {
+    create_before_destroy = true
+    prevent_destroy       = true
+    ignore_changes        = [tags]
+  }
+}
+create_before_destroy: Avoid downtime
+
+prevent_destroy: Protect critical infra
+
+ignore_changes: Ignore external/manual changes
+
+🔹 6. provisioner – Run commands/scripts (not recommended for production)
+hcl
+Copy
+Edit
+resource "null_resource" "setup" {
+  provisioner "local-exec" {
+    command = "echo Hello from Terraform"
+  }
+}
+⚠️ Use only when necessary — it's fragile and not idempotent.
+
+✅ Summary Table
+Meta-Argument	Purpose	Example Use Case
+count       	Create multiple identical resources	5 EC2 instances
+for_each	    Loop over a map or set	One bucket per name in list
+provider	    Use alternate provider config	Deploy to multiple AWS regions
+depends_on	    Force resource dependency	Wait for DB before app deploy
+lifecycle	    Customize create/destroy/update behavior	Prevent accidental deletions
+provisioner	    Run commands/scripts	Bootstrap servers (non-prod preferred)
+
+
+
+
+1. count – Create multiple EC2 instances
+
+variable "instance_count" {
+  default = 3
+}
+
+resource "aws_instance" "web" {
+  count         = var.instance_count
+  ami           = "ami-12345678"
+  instance_type = "t2.micro"
+
+  tags = {
+    Name = "web-${count.index}"
+  }
+}
+
+
+2. for_each – Create multiple S3 buckets
+
+
+variable "bucket_names" {
+  default = ["logs", "media", "backups"]
+}
+
+resource "aws_s3_bucket" "buckets" {
+  for_each = toset(var.bucket_names)
+
+  bucket = "my-${each.key}-bucket-123"
+  acl    = "private"
+
+  tags = {
+    Name = each.key
+  }
+}
+
+🧠 This will create 3 S3 buckets named:
+
+my-logs-bucket-123
+
+my-media-bucket-123
+
+my-backups-bucket-123
+
+3. depends_on – Force resource order
+
+
+resource "aws_s3_bucket" "logs" {
+  bucket = "log-storage-bucket"
+  acl    = "private"
+}
+
+resource "null_resource" "after_bucket" {
+  depends_on = [aws_s3_bucket.logs]
+
+  provisioner "local-exec" {
+    command = "echo Bucket created successfully!"
+  }
+}
+
