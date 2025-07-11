@@ -1,0 +1,22 @@
+resource "aws_s3_bucket" "finance" {
+    bucket = ""
+    tage=s = {
+
+        Description
+    }
+}
+
+resource "aws_s3_bucket_object" "finance-2020" {
+    content = ""
+    key = ""
+    bucket = "aws_s3_bicket.finance.id"
+}
+
+data "aws_iam_group" finance-data" {
+    group_name = "finance_anlyst"
+}
+
+resource "aws_s3_bucket_policy" "finance-policy" {
+    bucket = "aws_s3_bucket.finance.id"
+    policy = file.("policy.json)
+}

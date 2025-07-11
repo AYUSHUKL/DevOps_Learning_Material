@@ -1,2 +1,32 @@
 ** terraform init command install required plugins
-**
+** when some resource are created mannualy on aws and we need to use it by terraform , we can use that by datasource
+for e.g
+
+data "aws_iam_group" finance-data" {
+    group_name = "finance_anlyst"
+}
+
+
+
+
+
+^^^^^^^Commands^^^^
+
+aws iam create-user --user mary --endpoint http://aws:4566
+
+aws --endpoint http://aws:4566 iam attach-user-policy --user-name mary --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
+
+aws --endpoint http://aws:4566 iam attach-group-policy --group-name project-sapphire-devlopers --policy-arn arn:aws:iam::aws:policy/AmazonEC2FullAccess
+
+
+
+
+===============================
+
+s3 bucket 
+
+| Question                          | Answer                                         |
+| --------------------------------- | ---------------------------------------------- |
+| Are bucket names globally unique? | Yes                                            |
+| Is bucket storage global?         | No — tied to a region                          |
+| Why is region in the DNS?         | To route traffic to correct AWS regional infra |
