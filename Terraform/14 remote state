@@ -83,3 +83,11 @@ output "vpc_id" {
 | `terraform state show` (all resources) | Run individually per resource, e.g., `terraform state show aws_instance.web` | Shows attributes of resources one-by-one; no single command for all at once  |
 
 
+Bonus Notes
+🧠 terraform state list is great for finding resource addresses (especially inside modules).
+
+🧹 terraform state rm is useful when you manually delete something and want Terraform to stop tracking it.
+
+🔄 terraform state mv is useful during refactoring (e.g., moving to modules).
+
+🔍 terraform state pull gives raw JSON state, which you can inspect or process programmatically.
