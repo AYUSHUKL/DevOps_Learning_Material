@@ -1,0 +1,146 @@
+Provisioner: Provide a way for us to carry out tasks on a remote machine, such as installing software or configuring services.
+
+🧩 What is a Provisioner in Terraform?
+Provisioners in Terraform are used to execute scripts or commands on a local or remote machine after a resource is created (or destroyed).
+
+They're usually used to bootstrap, configure, or clean up infrastructure components.
+
+🛠️ Types of Provisioners
+Type	Purpose	Runs On
+remote-exec	Executes commands on the created resource (e.g., an EC2 instance)	Remote (e.g., EC2, VM)
+local-exec	Runs a command on the machine where Terraform is run (e.g., your laptop or CI runner)	Local
+file	Uploads a file from local to the remote resource	Remote
+
+✅ Example: remote-exec Provisioner
+Used to SSH into a server and run commands.
+
+hcl
+Copy
+Edit
+resource "aws_instance" "example" {
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+  key_name      = "my-key"
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt update",
+      "sudo apt install -y nginx"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = file("~/.ssh/id_rsa")
+      host        = self.public_ip
+    }
+  }
+}
+✅ Example: local-exec Provisioner
+Used to run something on your own machine, like creating a file or calling a script:
+
+hcl
+Copy
+Edit
+provisioner "local-exec" {
+  command = "echo ${aws_instance.example.public_ip} >> ip-list.txt"
+}
+✅ Example: file Provisioner
+Used to upload a file from your machine to the server:
+
+hcl
+Copy
+Edit
+provisioner "file" {
+  source      = "script.sh"
+  destination = "/tmp/script.sh"
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("~/.ssh/id_rsa")
+    host        = self.public_ip
+  }
+}
+⚠️ Important Notes
+Rule	Why It Matters
+Not idempotent	Provisioners may run every time on changes
+Can fail silently	Failures can leave infra half-configured
+Not recommended for core infra	Use them only for bootstrapping, not configuration management
+Use external tools	Prefer tools like Ansible, Chef, Puppet, or cloud-init
+
+✅ Best Practices
+Use user_data instead of remote-exec where possible (e.g., for EC2 bootstrap).
+
+Use provisioners only as a last resort.
+
+If used, add on_failure = continue or on_failure = fail to control behavior.
+
+hcl
+Copy
+Edit
+provisioner "remote-exec" {
+  on_failure = "continue"  # or "fail"
+  ...
+}
+📌 Summary Table
+Provisioner	Purpose	Runs on
+local-exec	Run local script/command	Terraform host
+remote-exec	Run script on remote resource	EC2/VM/etc
+file	Upload file to remote instance	EC2/VM/etc
+
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+# Create a key pair (optional: replace with your actual public key)
+resource "aws_key_pair" "web" {
+  key_name   = "web-key"
+  public_key = file("~/.ssh/id_rsa.pub")  # Use your actual public key file path
+}
+
+# Create security group with SSH access (port 22)
+resource "aws_security_group" "web_sg" {
+  name        = "web-sg"
+  description = "Allow SSH access"
+  vpc_id      = "vpc-xxxxxxxx" # replace with your actual VPC ID
+
+  ingress {
+    description = "SSH from anywhere"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# Launch EC2 instance
+resource "aws_instance" "webserver" {
+  ami           = "ami-0c55b159cbfafe1f0" # Replace with a valid AMI for your region
+  instance_type = "t2.micro"
+  key_name      = aws_key_pair.web.key_name
+  security_groups = [aws_security_group.web_sg.name]
+
+  tags = {
+    Name        = "MyWebServer"
+    Description = "EC2 instance for web server with SSH access"
+  }
+
+  user_data = <<-EOF
+              #!/bin/bash
+              echo "Hello, World!" > /var/www/html/index.html
+              EOF
+}
+
+
+*****
+
+ User data scripts only run at first boot whereas the instance modification causes a reboot.

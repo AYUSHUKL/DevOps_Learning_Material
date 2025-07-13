@@ -1,0 +1,101 @@
+Debugging Terraform can be tricky — but Terraform provides several built-in tools and tips to understand, troubleshoot, and fix issues effectively.
+
+Here’s a complete guide to debugging Terraform, from basic logs to advanced techniques:
+
+🛠️ 1. Enable Debug Logging
+Terraform supports verbose logging via the TF_LOG environment variable.
+
+✅ Common Levels:
+Level	What it shows
+TRACE	Most detailed (all internal steps)
+DEBUG	Helpful for debugging execution issues
+INFO	Normal info-level logs
+WARN	Only warnings
+ERROR	Only errors
+
+🧪 Example:
+bash
+Copy
+Edit
+export TF_LOG=DEBUG
+terraform apply
+➡️ You’ll see debug output in your terminal.
+
+To log to a file:
+
+bash
+Copy
+Edit
+export TF_LOG=DEBUG
+export TF_LOG_PATH=terraform-debug.log
+terraform plan
+🔍 2. Use terraform plan and terraform show
+terraform plan: See what Terraform is going to change
+
+terraform show: Inspect the current state file
+
+terraform show planfile: See what changes are pending in a saved plan
+
+Example:
+
+bash
+Copy
+Edit
+terraform plan -out=tfplan
+terraform show tfplan
+🔄 3. Check State Issues
+terraform state list: See what’s tracked
+
+terraform state show <resource>: See all values Terraform knows
+
+terraform import: Re-import a resource if missing
+
+terraform taint: Force recreate a resource
+
+terraform untaint: Remove taint if added accidentally
+
+🔍 4. Common Issues & Fixes
+Problem	Cause	Fix
+Resource created manually	Terraform doesn’t see it	Use terraform import
+Values not updating	Drift between state and infra	terraform refresh or apply
+Incorrect provider config	Region mismatch, credentials missing	Check provider block & env vars
+Access denied errors	IAM or policy issue	Confirm IAM role or token
+Terraform crashing	Bug or corrupted plugin	Upgrade Terraform or delete .terraform/ and re-init
+
+🧰 5. Use depends_on for explicit dependency
+Sometimes Terraform creates resources in the wrong order.
+
+hcl
+Copy
+Edit
+resource "aws_instance" "web" {
+  ...
+  depends_on = [aws_security_group.web_sg]
+}
+🧪 6. Dry Run with -target
+Focus on debugging just one resource:
+
+bash
+Copy
+Edit
+terraform plan -target=aws_instance.web
+🧼 7. Clean up & Re-init
+Sometimes reinitializing helps resolve backend/plugin issues:
+
+bash
+Copy
+Edit
+rm -rf .terraform
+terraform init
+✅ 8. Terraform Graph (optional)
+Visualize dependencies:
+
+bash
+Copy
+Edit
+terraform graph | dot -Tpng > graph.png
+🚨 9. Use Community Help
+Use terraform-provider-aws GitHub issues for known bugs.
+
+Use terraform console to test expressions or variable values.
+

@@ -30,3 +30,31 @@ s3 bucket
 | Are bucket names globally unique? | Yes                                            |
 | Is bucket storage global?         | No — tied to a region                          |
 | Why is region in the DNS?         | To route traffic to correct AWS regional infra |
+
+================================
+
+The command used to create this key is
+ aws ec2 create-key-pair --endpoint http://aws:4566 --key-name jade --query 'KeyMaterial' --output text > /root/terraform-projects/project-jade/jade.pem
+
+ ===============================
+
+ describe ec2
+
+ aws ec2 describe-instances --endpoint http://aws:4566
+
+ ---------------
+
+ to fetch id of a resource
+
+ aws ec2 describe-instances --endpoint http://aws:4566  --filters "Name=image-id,Values=ami-082b3eca746b12a89" | jq -r '.Reservations[].Instances[].InstanceId'
+
+
+output : i-395134a4eeaa4794b
+
+
+------- 
+to import the resource
+
+terraform import aws_instance.jade-mw id-of-the-resource
+
+terraform import aws_instance.jade-mw i-395134a4eeaa4794b
