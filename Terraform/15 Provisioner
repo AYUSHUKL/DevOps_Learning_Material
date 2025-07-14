@@ -144,3 +144,11 @@ resource "aws_instance" "webserver" {
 *****
 
  User data scripts only run at first boot whereas the instance modification causes a reboot.
+
+
+ resource "aws_eip" "eip" {
+  vpc      = true
+  instance = aws_instance.cerberus.id
+  provisioner "local-exec" {
+    command = "echo ${aws_eip.eip.public_dns} >> /root/cerberus_public_dns.txt"
+  }

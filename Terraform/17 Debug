@@ -98,4 +98,3 @@ terraform graph | dot -Tpng > graph.png
 Use terraform-provider-aws GitHub issues for known bugs.
 
 Use terraform console to test expressions or variable values.
-
