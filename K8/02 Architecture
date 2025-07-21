@@ -1,0 +1,144 @@
+                       +---------------------------+
+                       |     Ingress Controller    |   ← (10-11 o'clock)
+                       +---------------------------+
+                       |     External Load Balancer|
+                       +---------------------------+
+                                 |
+               +----------------+----------------+
+               |                                 |
++--------------v---------------+     +-----------v-------------+
+|        CoreDNS               |     |     ConfigMap/Secret    | ← (9-10 o'clock)
++-----------------------------+     +--------------------------+
+               |                                 |
+         +-----v-----+                 +---------v--------+
+         |  Services |  ← (8 o'clock)  |   PersistentVols  |
+         +-----------+                 +-------------------+
+               |                                 |
+         +-----v---------------------------------v--------+
+         |               ReplicaSets/Deployments         | ← (6 o'clock)
+         +------------------------------------------------+
+                                |
+                      +--------v--------+
+                      |      Pods       | ← (5 o'clock)
+                      +--------+--------+
+                               |
+                    +----------v-----------+
+                    |   Containers & Vols  | ← (4 o'clock)
+                    +----------------------+
+
+            [Managed by kubelet & kube-proxy at Node level] ← (2-3 o'clock)
+                           |
+        +------------------v-------------------+
+        |         Node (Worker)                | ← (1-2 o'clock)
+        | kubelet, kube-proxy, container runtime |
+        +--------------------------------------+
+
+        +------------------+  +------------------+
+        |     Master       |  |   etcd (DB)      | ← (12 o'clock)
+        | API Server       |  |                  |
+        | Scheduler        |  +------------------+
+        | Controller Mgr   |
+        +------------------+
+
+
+🔹 1. Master Node (Control Plane)
+API Server – Entry point for kubectl & tools
+
+Scheduler – Places pods on appropriate worker nodes
+
+Controller Manager – Handles Replication, Node Monitoring, etc.
+
+etcd – Distributed key-value store (stores all cluster state)
+
+🔸 2. Worker Nodes
+kubelet – Communicates with API Server, manages pods on the node
+
+kube-proxy – Maintains network rules on nodes for service traffic
+
+Container Runtime – e.g., containerd or Docker (runs containers)
+
+🧩 3. Core Components
+Pods – Smallest deployable unit in k8s
+
+Containers – Inside pods, runs the application
+
+ReplicaSet – Ensures a specified number of pod replicas are running
+
+Deployment – Declarative updates to Pods and ReplicaSets
+
+🔧 4. Configuration & Secrets
+ConfigMap – Inject config data (e.g., env vars, config files) into pods
+
+Secret – Stores sensitive data (passwords, tokens, etc.)
+
+✅ Mounted as files or environment variables into pods.
+
+📁 5. Storage
+Volumes – Persist data across container restarts
+
+PersistentVolume (PV) – Actual storage
+
+PersistentVolumeClaim (PVC) – Request for PV by user
+
+🔗 6. Networking
+Service – Exposes a set of Pods as a network service
+
+ClusterIP – Internal access
+
+NodePort – External access via node IP and static port
+
+LoadBalancer – External load balancing
+
+Ingress – HTTP routing to services, managed by Ingress Controller
+
+🌐 7. Add-ons
+CoreDNS – Internal DNS
+
+Dashboard – Web UI (optional)
+
+Metrics Server / Prometheus – Monitoring
+
+🔍 Example: ConfigMap in Pod
+yaml
+Copy
+Edit
+# config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  APP_MODE: "production"
+  APP_PORT: "8080"
+yaml
+Copy
+Edit
+# pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sample-pod
+spec:
+  containers:
+  - name: app-container
+    image: nginx
+    env:
+    - name: APP_MODE
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: APP_MODE
+✅ Summary Table
+Component	Description
+API Server	Central control component
+etcd	Cluster state store
+Scheduler	Assigns pods to nodes
+kubelet	Manages node and pod lifecycle
+kube-proxy	Manages networking
+ConfigMap	Injects non-sensitive configs
+Secret	Injects sensitive configs
+Deployment	Manages replicas and rollout
+Pod	Group of containers
+Service	Exposes pod group
+Ingress	HTTP routing to services
+Volume/PV/PVC	Persistent storage mechanism
