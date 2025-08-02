@@ -242,3 +242,129 @@ Debugging system resource usage
 
 Finding PID to inspect or kill a stuck process (not recommended unless necessary)
 
+---------------------------------
+What is the user used to execute the sleep process within the ubuntu-sleeper pod?
+
+1. Get into the Pod:
+bash
+Copy
+Edit
+kubectl exec -it ubuntu-sleeper -- bash
+(If it doesn't have bash, use sh instead.)
+
+2. Check the sleep process user:
+Inside the container, run:
+
+bash
+Copy
+Edit
+ps aux | grep sleep
+You’ll get output like:
+
+yaml
+Copy
+Edit
+root         7  0.0  0.0   4248   652 ?        Ss   10:00   0:00 sleep 1000
+✅ Answer:
+The user is usually root unless explicitly changed in the pod/container spec using securityContext.runAsUser.
+
+🔍 How to Know Without Entering the Pod
+If you want to check via YAML:
+
+bash
+Copy
+Edit
+kubectl get pod ubuntu-sleeper -o yaml
+Look for something like:
+
+yaml
+Copy
+Edit
+securityContext:
+  runAsUser: 1000
+If this is absent, the container defaults to running as root.
+
+🚀 TL;DR:
+By default, the sleep process inside the ubuntu-sleeper pod runs as root user — unless a custom runAsUser or non-root base image is used.
+
+========================
+
+kubectl create deployment blue --image=nginx --replicas=3
+
+
+> How many objects are in the prod environment including PODs, ReplicaSets and any other objects?
+
+= kubectl get all --selector env=prod
+
+the above command will list out all objects availale in that env
+
+for ex: pod, svc, dployment, replicaset
+
+> Identify the POD which is part of the prod environment, the finance BU and of frontend tier?
+= kubectl get all --selector env=prod,bu=finance,tier=frontend
+
+above command will find the specific object releted to given conditions
+
+
+The ReplicaSet "replicaset-1" is invalid: spec.template.metadata.labels: Invalid value: map[string]string{"tier":"nginx"}: `selector` does not match template `labels`
+
+====================================================================
+🛠 Real-World Examples:
+Use Case	Readiness	Liveness
+Java Spring Boot app that takes time to start	Avoids traffic before app is ready	Restarts app if JVM gets stuck
+Database-dependent service	Waits until DB connection is established	Restarts if DB connection is lost permanently
+Queue consumer (like Kafka consumer)	Waits for topic subscription	Restarts if consumer hangs
+Microservices in production	Ensures dependencies (cache, auth, DB) are ready before traffic	Keeps service healthy and auto-healing
+
+
+==================================================================
+
+We have deployed Ingress Controller, resources and applications. Explore the setup.
+
+Note: They are in different namespaces.
+
+✅ Step 1: Get All Namespaces
+
+kubectl get ns
+
+
+✅ Step 2: Inspect the Ingress Controller
+Usually in namespace like ingress-nginx:
+
+
+kubectl get pods -n ingress-nginx
+kubectl get svc -n ingress-nginx
+kubectl describe svc ingress-nginx-controller -n ingress-nginx
+
+✅ Step 3: Check All Ingress Resources (All Namespaces)
+
+kubectl get ingress --all-namespaces
+To see details of each Ingress:
+
+
+kubectl describe ingress <ingress-name> -n <namespace>
+
+✅ Step 4: Explore the Backend Applications
+Apps may be in a different namespace (e.g., default, app1, etc.):
+
+
+kubectl get pods -n <namespace>
+kubectl get svc -n <namespace>
+
+✅ Step 5: Check for TLS (If Configured)
+Look for secrets used in Ingress:
+
+kubectl get secret -n <namespace>
+kubectl describe secret <tls-secret-name> -n <namespace>
+If using cert-manager:
+
+
+kubectl get certificate -A
+kubectl get issuer -A
+
+✅ Step 7: YAML Reference (Optional)
+To review the full configuration:
+
+kubectl get ingress <name> -n <namespace> -o yaml
+kubectl get svc <name> -n <namespace> -o yaml
+kubectl get deploy <name> -n <namespace> -o yaml

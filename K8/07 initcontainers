@@ -1,0 +1,225 @@
+In a multi-container pod, each container is expected to run a process that stays alive as long as the POD’s lifecycle. For example in the multi-container pod that we talked about earlier that has a web application and logging agent, both the containers are expected to stay alive at all times. The process running in the log agent container is expected to stay alive as long as the web application is running. If any of them fail, the POD restarts.
+
+But at times you may want to run a process that runs to completion in a container. For example, a process that pulls a code or binary from a repository that will be used by the main web application. That is a task that will be run only one time when the pod is first created. Or a process that waits for an external service or database to be up before the actual application starts. That’s where initContainers comes in.
+
+An initContainer is configured in a pod-like all other containers, except that it is specified inside a initContainers section, like this:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+spec:
+  containers:
+  - name: myapp-container
+    image: busybox:1.28
+    command: \['sh', '-c', 'echo The app is running! && sleep 3600'\]
+  initContainers:
+  - name: init-myservice
+    image: busybox
+    command: \['sh', '-c', 'git clone &nbsp;;'\]
+When a POD is first created the initContainer is run, and the process in the initContainer must run to a completion before the real container hosting the application starts.
+
+You can configure multiple such initContainers as well, like how we did for multi-pod containers. In that case, each init container is run one at a time in sequential order.
+
+If any of the initContainers fail to complete, Kubernetes restarts the Pod repeatedly until the Init Container succeeds.
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+spec:
+  containers:
+  - name: myapp-container
+    image: busybox:1.28
+    command: \['sh', '-c', 'echo The app is running! && sleep 3600'\]
+  initContainers:
+  - name: init-myservice
+    image: busybox:1.28
+    command: \['sh', '-c', 'until nslookup myservice; do echo waiting for myservice; sleep 2; done;'\]
+  - name: init-mydb
+    image: busybox:1.28
+    command: \['sh', '-c', 'until nslookup mydb; do echo waiting for mydb; sleep 2; done;'\]
+
+
+
+    apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2025-07-23T06:27:06Z"
+  generation: 1
+  name: orange
+  namespace: default
+  resourceVersion: "1184"
+  uid: 7b3f8700-35a9-4620-a282-8fc72ba3c4b6
+spec:
+  containers:
+  - command:
+    - sh
+    - -c
+    - echo The app is running! && sleep 3600
+    image: busybox:1.28
+    imagePullPolicy: IfNotPresent
+    name: orange-container
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-d75ff
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  initContainers:
+  - command:
+    - sh
+    - -c
+    - sleeeep 2;
+    image: busybox
+    imagePullPolicy: Always
+    name: init-myservice
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-d75ff
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  initContainers:
+  - command:
+    - sh
+    - -c
+    - sleeeep 2;
+    image: busybox
+    imagePullPolicy: Always
+    name: init-myservice
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-d75ff
+      readOnly: true
+  nodeName: controlplane
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+   - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-d75ff
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2025-07-23T06:27:08Z"
+    status: "True"
+    type: PodReadyToStartContainers
+  - lastProbeTime: null
+    lastTransitionTime: "2025-07-23T06:27:06Z"
+    message: 'containers with incomplete status: [init-myservice]'
+    reason: ContainersNotInitialized
+    status: "False"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2025-07-23T06:27:06Z"
+    message: 'containers with unready status: [orange-container]'
+    reason: ContainersNotReady
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2025-07-23T06:27:06Z"
+    message: 'containers with unready status: [orange-container]'
+    reason: ContainersNotReady
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2025-07-23T06:27:06Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - image: busybox:1.28
+    imageID: ""
+    lastState: {}
+    name: orange-container
+    ready: false
+    restartCount: 0
+    started: false
+    state:
+      waiting:
+        reason: PodInitializing
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-d75ff
+      readOnly: true
+      recursiveReadOnly: Disabled
+  hostIP: 192.168.145.152
+  hostIPs:
+  - ip: 192.168.145.152
+  initContainerStatuses:
+  - containerID: containerd://9188e6233a59ca4ccb25bd0901ca1e8a7d195781b0bdd417ed07fbd967e47f7f
+    image: docker.io/library/busybox:latest
+    imageID: docker.io/library/busybox@sha256:f85340bf132ae937d2c2a763b8335c9bab35d6e8293f70f606b9c6178d84f42b
+    lastState:
+      terminated:
+        containerID: containerd://9188e6233a59ca4ccb25bd0901ca1e8a7d195781b0bdd417ed07fbd967e47f7f
+        exitCode: 127
+        finishedAt: "2025-07-23T06:27:23Z"
+        reason: Error
+        startedAt: "2025-07-23T06:27:23Z"
+    name: init-myservice
+    ready: false
+    resources: {}
+    restartCount: 2
+    started: false
+    state:
+      waiting:
+        message: back-off 20s restarting failed container=init-myservice pod=orange_default(7b3f8700-35a9-4620-a282-8fc72ba3c4b6)
+        reason: CrashLoopBackOff
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-d75ff
+      readOnly: true
+      recursiveReadOnly: Disabled
+  phase: Pending
+    podIP: 10.22.0.13
+  podIPs:
+  - ip: 10.22.0.13
+  qosClass: BestEffort
+  startTime: "2025-07-23T06:27:06Z"
+
+
