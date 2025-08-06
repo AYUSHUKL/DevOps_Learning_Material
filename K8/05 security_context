@@ -13,3 +13,44 @@ spec:
     - "4800"
     image: ubuntu
     name: ubuntu-sleeper
+---
+
+apiVersion: v1
+kind: persistentVolume
+metadata:
+  name: pv-log
+spec:
+  capacity:
+    storage: 100Mi
+  accessModes:
+   -  ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+  - path: /pv/log
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-log
+spec:
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 100Mi
+  hostPath:
+    path: /pv/log
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: myclaim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Mi
+  volumeName: pv-log   
