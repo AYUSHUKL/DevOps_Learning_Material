@@ -1,0 +1,21 @@
+Please create a custom resource instance named datacenter utilizing the existing Custom Resource Definition (CRD) with the following specifications:
+
+apiVersion: traffic.controller/v1
+
+kind: Global
+
+Set the following fields under spec:
+
+dataField: 2
+
+access: true
+
+
+---
+apiVersion: traffic.controller/v1
+kind: Global
+metadata:
+  name: datacenter    
+spec:
+  dataField: 2
+  access: true

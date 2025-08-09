@@ -368,3 +368,13 @@ To review the full configuration:
 kubectl get ingress <name> -n <namespace> -o yaml
 kubectl get svc <name> -n <namespace> -o yaml
 kubectl get deploy <name> -n <namespace> -o yaml
+
+
+-------------
+
+
+Identify the short names of the deployments, replicasets, cronjobs and customresourcedefinitions
+
+hint: Take the help of the kubectl api-resources command and identify the short names.
+
+kubectl api-resources
